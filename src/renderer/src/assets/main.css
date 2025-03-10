@@ -1,0 +1,350 @@
+@import './base.css';
+
+/* Login division related css  */
+
+body{
+  background-color: #efefef;
+  font-family: "Poppins", sans-serif;
+}
+
+.login-div .ant-card-body h2 {
+  font-weight: 600;
+}
+
+.login-div .ant-form-item-required{
+  font-weight: 550;
+}
+
+.main-div{
+  overflow-y: hidden;
+}
+
+
+.study-list-div{
+  background-color: #f8f8f8;
+  height: calc(100vh - 60px);
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-bottom: 10px;
+  overflow-y: auto;
+}
+
+.study-info-comp{
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  overflow-y: hidden;
+  border: 1px solid #aaaaaa;
+}
+
+.study-info-comp-collapsed::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px; /* Adjust height as needed */
+  background: linear-gradient(to bottom, rgba(235, 235, 235, 0), rgba(182, 182, 182, 0.3));
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out, height 0.5s ease-in-out;
+}
+
+/* Hide gradient smoothly when expanded */
+.study-info-comp-expanded::after {
+  opacity: 0;
+  height: 0;
+}
+
+.study-info-upload-success{
+  border: 2px solid rgb(114, 224, 114);
+}
+
+.study-info-upload-start{
+  border: 2px solid rgb(245, 220, 108);
+}
+
+.study-info-upload-error{
+  border: 2px solid rgb(255, 136, 136);
+}
+
+
+.study-info-comp:hover{
+  background-color: #f5f5f5;
+}
+
+.study-info-comp .ant-card-body{
+  padding: 14px !important;
+  padding-top: 16px !important;
+  padding-bottom: 3px !important;
+}
+
+.patient-data-div{
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.patient-data-title{
+  font-weight: 660;
+}
+
+.upload-study-button span{
+  font-weight: 600;
+}
+
+.timer-information{
+  font-size: 16px !important;
+}
+
+.particular-series-info-index{
+  font-weight: 700;
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.particular-series-info-div{
+  padding-left: 10px;
+  margin-top: 5px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.particular-series-progres-info-div{
+  border-left: 1px solid black;
+  padding-left: 10px;
+}
+
+.patient-series-modality{
+  font-size: 15px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.patient-series-image-count{
+  font-size: 17px;
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.particular-series-index {
+  transition: background-color 0.3s ease-in-out;
+  border-top: 1px solid #b9b9b9;
+}
+
+.header-div{
+  background-color: #3d5a80;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.study-upload-div{
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 12px;
+  overflow-y: hidden;
+}
+
+.study-list-div .ant-upload-list{
+  height: 70vh !important;
+}
+
+.dicom-upload-main-div{
+  overflow-y: hidden;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 12px;
+}
+
+.dicom-upload-image-drawer .ant-upload {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-top: 0.50rem !important;
+  padding-bottom: 0.50rem !important;
+  margin-top: 10px;
+}
+
+.dicom-upload-image-drawer .ant-upload-list-item {
+  height: auto !important;
+  padding: 0.60rem;
+  margin-top: 0.20rem;
+  background-color: #FFFFFF !important;
+  border-radius: 8px;
+  transition: 0.2s ease background-color;
+}
+
+.dicom-upload-image-drawer .anticon-paper-clip {
+  color: #000000 !important;
+}
+
+.dicom-upload-image-drawer .ant-upload-list-item-name {
+  color: #000000 !important;
+}
+
+.dicom-upload-image-drawer .ant-tooltip {
+  display: none !important;
+}
+
+.dicom-upload-image-drawer .ant-upload-list {
+  height: calc(100vh - 260px) !important;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.dicom-upload-image-drawer .ant-upload-list-item:hover {
+  background-color: #4f75a7 !important;
+  border: 1px solid #c5c5c5;
+  cursor: pointer;
+}
+
+.dicom-upload-image-drawer .ant-upload-list-item:hover .anticon-paper-clip {
+  color: #FFFFFF !important;
+}
+
+.dicom-upload-image-drawer .ant-upload-list-item:hover .ant-upload-list-item-name {
+  color: #FFFFFF !important;
+}
+
+/* scrollbar related css  */
+
+/* Scrollbar width */
+::-webkit-scrollbar {
+  width: 8px;  /* Width for vertical scrollbar */
+  height: 8px; /* Height for horizontal scrollbar */
+}
+
+/* Scrollbar Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light gray background */
+  border-radius: 10px;
+}
+
+/* Scrollbar Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; /* Darker gray scrollbar */
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+/* Scrollbar Handle on Hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Even darker gray */
+}
+
+
+.upload-to-server-button span{
+  font-weight: 600;
+}
+
+.study-upload-patient-name{
+  font-size: 14px;
+  color: #000000;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: auto;
+}
+
+.study-upload-patient-name span{
+  font-weight: 600;
+}
+
+.study-upload-divider{
+  font-weight: 600;
+  color: #000000;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+
+.notification-div {
+  padding: 8px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  width: 300px !important;
+}
+
+.notification-div .ant-notification-notice-message {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.notification-div .ant-notification-notice-description {
+  font-size: 12px !important;
+}
+
+
+.profile-image{
+  height: 32px;
+  width: 32px;
+  cursor: pointer;
+  margin-top: 3px;
+  margin-bottom: auto;
+}
+
+
+.splash-div{
+  background-color: #f5f5f5;
+  height: 100vh;
+}
+
+.upload-image{
+  height: 110px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  justify-content: center;
+}
+
+.uploader-name{
+  font-size: 18px;
+  color: #000000;
+  font-weight: 600;
+  text-align: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.uploader-version{
+  font-size: 14px;
+  color: #636363;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.dicom-uploader-modal .ant-modal-content{
+  padding: 0px;
+}
+
+.dicom-uploader-modal .ant-modal-header{
+  background-color: #3d5a80;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.dicom-uploader-modal .ant-modal-close-icon{
+  color: #FFFFFF;
+}
+
+.dicom-uploader-modal .ant-modal-title{
+  color: #FFFFFF;
+}
+
+.dicom-uploader-modal .ant-modal-body{
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 8px;
+}
+
+.dicom-uploader-modal .ant-modal-footer{
+  padding-bottom: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
+}   
+
+.dicom-uploader-modal .ant-form  .ant-form-item-label{
+  font-weight: 700;
+}
