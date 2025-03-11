@@ -354,3 +354,8 @@ body{
   color: #000000 !important;
   font-size: 15px !important; 
 }
+
+.ant-progress-text{
+  font-weight: 600;
+  margin-right: 8px;
+}

@@ -14,7 +14,7 @@ const fetchStudyList = async () => {
 export {fetchStudyList} ; 
 
 const fetchParticularStudyInfoRequest = async(studyid) => {
-    const response = await fetch(`${ORTHANC_URL}/studies/${studyid}?requestedTags=ModalitiesInStudy;NumberOfStudyRelatedInstances;NumberOfStudyRelatedSeries`, {
+    const response = await fetch(`${ORTHANC_URL}studies/${studyid}?requestedTags=ModalitiesInStudy;NumberOfStudyRelatedInstances;NumberOfStudyRelatedSeries`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -26,7 +26,7 @@ const fetchParticularStudyInfoRequest = async(studyid) => {
 export {fetchParticularStudyInfoRequest} ; 
 
 const fetchParticularStudySeriesInfoRequest = async (studyId) => {
-    const response = await fetch(`${ORTHANC_URL}/studies/${studyId}/series`, {
+    const response = await fetch(`${ORTHANC_URL}studies/${studyId}/series`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -38,7 +38,7 @@ const fetchParticularStudySeriesInfoRequest = async (studyId) => {
 export {fetchParticularStudySeriesInfoRequest} ; 
 
 const deleteParticularStudyRequest = async (studyId) => {
-    const response = await fetch(`${ORTHANC_URL}/studies/${studyId}`, {
+    const response = await fetch(`${ORTHANC_URL}studies/${studyId}`, {
         method: "DELETE", 
         headers: {
             "Content-Type": "application/json"
@@ -46,11 +46,21 @@ const deleteParticularStudyRequest = async (studyId) => {
     }) ; 
     return response.json()
 }
-
 export {deleteParticularStudyRequest} ; 
 
+const deleteParticularSeriesRequest = async (SeriesId) => {
+    const response = await fetch(`${ORTHANC_URL}series/${SeriesId}`, {
+        method: "DELETE", 
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }); 
+    return response.json() ; 
+}
+export {deleteParticularSeriesRequest} ; 
+
 const studyBackupStartRequest = async (studyId) => {
-    const response = await fetch(`${ORTHANC_URL}/studies/${studyId}/archive`, {
+    const response = await fetch(`${ORTHANC_URL}studies/${studyId}/archive`, {
         "method": "POST", 
         headers: {
             "Content-Type": "application/json"
@@ -66,9 +76,26 @@ const studyBackupStartRequest = async (studyId) => {
 }
 export {studyBackupStartRequest} ; 
 
+const seriesBackupStartRequest = async (seriesId) => {
+    const response = await fetch(`${ORTHANC_URL}series/${seriesId}/archive`, {
+        method: "POST", 
+        headers: {
+            "Content-Type": "application/json"
+        }, 
+        body: JSON.stringify({
+            "Asynchronous": true,
+            "Priority": 0,
+            "Synchronous": false,
+        })
+    }) ; 
+    let data = await response.json() ; 
+    return data ; 
+}
+export {seriesBackupStartRequest} ; 
+
 
 const checkJobStatusRequest = async (jobid) => {
-    let response = await fetch(`${ORTHANC_URL}/jobs/${jobid}`, {
+    let response = await fetch(`${ORTHANC_URL}jobs/${jobid}`, {
         "method": "GET", 
         headers: {
             "Content-Type": "application/json"
@@ -93,7 +120,7 @@ const restartOrthancServerRequest = async () => {
 export {restartOrthancServerRequest}
 
 const configureOrthancPeerRequest = async (payload) => {
-    let response = await fetch(`${ORTHANC_URL}/peers/${payload.orthanc_peer}`, {
+    let response = await fetch(`${ORTHANC_URL}peers/${payload.orthanc_peer}`, {
         method: "PUT", 
         headers: {
             "Content-Type": "application/json"
@@ -107,3 +134,16 @@ const configureOrthancPeerRequest = async (payload) => {
     return response ;  
 }
 export {configureOrthancPeerRequest} ;
+
+const studyPeerStoreRequest = async (payload, cloudPeer) => {
+    let response = await fetch(`${ORTHANC_URL}peers/${cloudPeer}/store`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }, 
+        body: JSON.stringify(payload)
+    }) ; 
+    response = await response.json() ; 
+    return response ; 
+}
+export {studyPeerStoreRequest} ; 

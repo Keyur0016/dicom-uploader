@@ -2,9 +2,7 @@ import { Row, Flex, Tooltip, Tag, Progress } from "antd";
 import React, { useState } from "react";
 import { FileImageFilled } from "@ant-design/icons";
 
-const StudySeriesInfoComp = ({seriesId, index, modality, imagecount}) => {
-    
-    const [uploadPercentage, setUploadPercentage] = useState(0);  
+const StudySeriesInfoComp = ({seriesId, index, modality, imagecount, uploaded}) => {
 
     return (
         <Row gutter={[16, 16]} 
@@ -16,9 +14,17 @@ const StudySeriesInfoComp = ({seriesId, index, modality, imagecount}) => {
                 {/* Series index informaiton  */}
                 <span className="particular-series-info-index">{index}</span>
 
-                {/* Progress bar related information  */}
                 <div className="particular-series-progres-info-div">
-                    <Progress percent={uploadPercentage} steps={5} size={13} strokeColor={"green"} />
+                    <Progress 
+                        percent={uploaded} 
+                        steps={4} 
+                        size={13} 
+                        strokeColor={
+                            uploaded < 30 ? "yellow" :
+                            uploaded >= 30 && uploaded < 70 ? "blue" :
+                            uploaded >= 70 && uploaded <= 100 ? "green" : "red"
+                        } 
+                    />
                 </div>
 
                 {/* Modality information  */}

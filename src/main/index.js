@@ -9,7 +9,7 @@ import { FILE_OPERATION_CONSTANT, FILE_OPERATION_READ_FAILED } from '../renderer
 import { FILE_OPERATION_FAILED } from '../renderer/src/constant/constant';
 import { ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JSON_CONFIGURATION_PATH, BACKUP_STUDY_PATH } from '../renderer/src/constant/filepath.constant';
 import { spawn } from 'child_process';
-import { configureOrthancPeerRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
+import { configureOrthancPeerRequest, deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 
@@ -178,7 +178,7 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
   try {
     const response = await axios({
       method: "GET", 
-      url: `${ORTHANC_URL}/jobs/${data?.backupJobID}/archive`, 
+      url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
       responseType: "stream"
     });
 
@@ -218,3 +218,54 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
     event.reply("study-backup-folder-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
   }
 });
+
+// # ======= 7 Study series wise backup related functionality handler ==================
+ipcMain.on("study-series-backup-handler", async(event, data) => {
+  try {
+    console.log("Comes inside this function");
+    
+    const response = await axios({
+      method: "GET", 
+      url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
+      responseType: "stream"
+    });
+
+    // Construct backup path
+    let backup_study_folder = path.join(
+      BACKUP_STUDY_PATH, 
+      data?.particularStudy?.PatientMainDicomTags?.PatientName
+    );
+
+    // Ensure that the full folder structure exists
+     if (!fs.existsSync(backup_study_folder)){
+      fs.mkdirSync(backup_study_folder, { recursive: true });
+    }
+
+    let backup_study_path = path.join(backup_study_folder, `${data?.series_id}.zip`);
+    
+    // Create write stream
+    const writer = fs.createWriteStream(backup_study_path);
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', async () => {
+        console.log("Series backup functionality done");
+        
+        await deleteParticularSeriesRequest(data?.series_id) ; 
+        event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
+        resolve({ success: true, backup_study_path });
+      });
+
+      writer.on('error', (error) => {
+          console.error("File Write Error:", error);
+          event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
+          reject(error);
+      });
+    });
+
+  } catch (error) {
+    console.log(error);
+    
+    event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED)
+  }
+})

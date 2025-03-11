@@ -25,8 +25,11 @@ if (process.contextIsolated) {
       orthanceExeHandler: () => ipcRenderer.send("orthanc-exe-configure"), 
       orthanceExeReply: (callBack) => ipcRenderer.on("orthanc-exe-reply", callBack), 
       backUpFolderHandler: (data) => ipcRenderer.send("study-backup-folder-handler",data), 
+      SeriesBackUpFolderHandler: (data) => ipcRenderer.send("study-series-backup-handler",data), 
       backupFolderReply: (callback) => ipcRenderer.on("study-backup-folder-reply", callback), 
+      SeriesBackupFolderReply: (callback) => ipcRenderer.on("study-series-backup-reply", callback), 
       studyBackupSuccess: (callBack) => ipcRenderer.on('study-backup-folder-reply-success', callBack) ,
+
     })
   } catch (error) {
     console.error(error)

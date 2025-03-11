@@ -1,6 +1,6 @@
 import { Button, Flex, Menu, Dropdown } from "antd";
 import React, { useState } from "react";
-import { SettingOutlined } from "@ant-design/icons";
+import { BackwardFilled, SettingOutlined } from "@ant-design/icons";
 import { UploadOutlined } from "@ant-design/icons";
 import { LogoutOutlined } from "@ant-design/icons";
 import SettingComp from "./settingComp";
@@ -25,11 +25,18 @@ const Header = ({isUpload}) => {
     const [isSettingModalOpen, setIsSettingModalOpen] = useState(false) ; 
     const navigation = useNavigate() ;
 
-    console.log(window.location);
-    
-
     return(
         <Flex className="header-div" gap={10}>
+
+            <Button style={{
+                marginTop: "auto", 
+                marginBottom: "auto"
+            }}
+                type="primary"
+                icon = {<BackwardFilled/>}
+            >
+            </Button>
+
             <Button icon = {<SettingOutlined/>} style={{
                 marginTop: 'auto', 
                 marginBottom: "auto"

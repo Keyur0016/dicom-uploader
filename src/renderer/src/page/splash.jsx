@@ -6,12 +6,38 @@ import { FILE_OPERATION_CONSTANT } from "../constant/constant";
 import showNotification from "../handler/notification.handler";
 import { useQuery } from "@tanstack/react-query";
 import { userInformationRequest } from "../handler/user.handler";
-import { GlobalContext } from "../context/globalContext";
+import { configureOrthancPeerRequest } from "../handler/study.handler";
+import { useMutation } from "@tanstack/react-query";
 
 const Splash = () => {
 
     const [loading, setLoading] = useState(false); 
-    const navigation = useNavigate(); 
+    const navigation = useNavigate();
+    
+    // Configure new orthanc peer related request handler ================
+    const { mutateAsync: configuredPeer, isPending} = useMutation({
+        mutationKey: ["configured", "orthanc", "peer"], 
+        mutationFn: async (data) => {
+            try {
+                const response = await configureOrthancPeerRequest({
+                    orthanc_peer: data.orthanc_peer, 
+                    orthanc_url: data.orthanc_url, 
+                    orthanc_username: data.orthanc_username, 
+                    orthanc_password: data.orthanc_password
+                });
+                
+                if (response?.status == 200){
+                    return true ;
+                }
+                
+            } catch (error) {
+                return false
+            }
+        }, 
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        onError: (error) => {}
+    });
 
     // User information fetch =============================================
     const {refetch: userInformaitonFetch} = useQuery({
@@ -26,6 +52,12 @@ const Splash = () => {
             }); 
             if (response?.status){
                 localStorage.setItem("orthanc-peer-data", JSON.stringify(response?.data)) ; 
+                await configuredPeer({
+                    orthanc_peer: response?.data?.orthanc_peer, 
+                    orthanc_username: response?.data?.orthanc_username, 
+                    orthanc_password: response?.data?.orthanc_password, 
+                    orthanc_url: response?.data?.orthanc_url
+                })
                 navigation(ROUTES_LIST.STUDYLIST_ROUTE) ; 
             }   else {
                 navigation(ROUTES_LIST.LOGIN_ROUTE); 
