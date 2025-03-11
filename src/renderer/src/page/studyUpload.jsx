@@ -119,10 +119,6 @@ const StudyUpload = () => {
 
     return (
         <div className="main-div">
-            <Header 
-                isUpload={true}
-            />
-
             <div className="dicom-upload-main-div">
 
                 <Flex gap={8}>

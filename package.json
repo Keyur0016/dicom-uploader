@@ -26,6 +26,7 @@
     "axios": "^1.8.2",
     "crypto-js": "^4.2.0",
     "electron-updater": "^6.3.9",
+    "fs-extra": "^11.3.0",
     "react-router-dom": "^7.3.0"
   },
   "devDependencies": {

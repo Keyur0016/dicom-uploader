@@ -25,6 +25,9 @@ const Header = ({isUpload}) => {
     const [isSettingModalOpen, setIsSettingModalOpen] = useState(false) ; 
     const navigation = useNavigate() ;
 
+    console.log(window.location);
+    
+
     return(
         <Flex className="header-div" gap={10}>
             <Button icon = {<SettingOutlined/>} style={{
@@ -36,7 +39,7 @@ const Header = ({isUpload}) => {
                 Settings
             </Button>  
 
-            {isUpload == undefined && (
+            {window.location.pathname !== "/studyupload" && (
                 <Button icon = {<UploadOutlined/>} style={{
                     marginTop: "auto", 
                     marginBottom: "auto"
@@ -66,6 +69,8 @@ const Header = ({isUpload}) => {
             <SettingComp
                 visible={isSettingModalOpen}
                 onClose={() => {
+                    console.log("Close functionality");
+                    
                     setIsSettingModalOpen(false)
                 }}
                 onSave={() => {

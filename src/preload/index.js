@@ -17,8 +17,16 @@ if (process.contextIsolated) {
       saveDicomSetting: (data) => ipcRenderer.send("save-dicom-setting", data),
       saveTokenInfo: (data) => ipcRenderer.send("save-token-info", data) , 
       readTokenInfo: () => ipcRenderer.invoke("read-token-info") , 
+      readSettingInfo: () => ipcRenderer.invoke("read-setting-info"), 
       saveSuccess: (callBack) => ipcRenderer.on("save-sucess", callBack) , 
-      saveFailed: (callBack) => ipcRenderer.on("save-error", callBack)
+      saveFailed: (callBack) => ipcRenderer.on("save-error", callBack), 
+      moveOrthancFolder: () => ipcRenderer.send("orthanc-server-handle"), 
+      moveOrthanceResponse: (callBack) => ipcRenderer.on("orthanc-server-reply", callBack), 
+      orthanceExeHandler: () => ipcRenderer.send("orthanc-exe-configure"), 
+      orthanceExeReply: (callBack) => ipcRenderer.on("orthanc-exe-reply", callBack), 
+      backUpFolderHandler: (data) => ipcRenderer.send("study-backup-folder-handler",data), 
+      backupFolderReply: (callback) => ipcRenderer.on("study-backup-folder-reply", callback), 
+      studyBackupSuccess: (callBack) => ipcRenderer.on('study-backup-folder-reply-success', callBack) ,
     })
   } catch (error) {
     console.error(error)

@@ -3,9 +3,15 @@ import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import fs from "fs" ; 
+import fsA from 'fs-extra';
 import { fileURLToPath } from 'url';
 import { FILE_OPERATION_CONSTANT, FILE_OPERATION_READ_FAILED } from '../renderer/src/constant/constant';
 import { FILE_OPERATION_FAILED } from '../renderer/src/constant/constant';
+import { ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JSON_CONFIGURATION_PATH, BACKUP_STUDY_PATH } from '../renderer/src/constant/filepath.constant';
+import { spawn } from 'child_process';
+import { configureOrthancPeerRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
+import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 
 // Define __dirname 
 const __filename = fileURLToPath(import.meta.url);
@@ -115,3 +121,100 @@ ipcMain.handle("read-token-info", async (event) => {
     event.reply("save-error", FILE_OPERATION_READ_FAILED)
   }
 })
+
+
+
+ipcMain.handle("read-setting-info", async (event) => {
+  try {
+    let data = fs.readFileSync(settingJsonFilePath, "utf-8") ; 
+    data = JSON.parse(data) ; 
+    return data ; 
+  } catch (error) {
+    event.reply("save-error", FILE_OPERATION_READ_FAILED)
+  }
+})
+
+// # 4 ==== Handle orthanc server related folder ====================
+ipcMain.on("orthanc-server-handle", async (event) => {
+  if (!fs.existsSync(ORTHANCE_SERVER_DESTINATION_FOLDER)){
+    try {
+      await fsA.copy(ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER) ; 
+      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORTAHNCE_SERVER_FOLDER_COPY)
+    } catch (error) {
+      console.log(error);
+      
+      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORATANCE_SERVER_FOLDER_COPY_FAILED)
+    }  
+  }
+})
+
+// # 5 ==== Configure orthanc.exe in background ==========================
+ipcMain.on("orthanc-exe-configure", async(event) => {
+  try {
+    await fetchStudyList() ; 
+  } catch (error) {
+    const exePath = path.join(ORTHANCE_SERVER_DESTINATION_FOLDER, "Orthanc.exe") ; 
+    try {
+      const process = spawn(exePath, [ORTHANCE_JSON_CONFIGURATION_PATH], {
+        stdio: ["ignore", "pipe", "pipe"], 
+        detached: true, 
+        windowsHide: true
+      }); 
+      if (process.pid){
+        console.log("Run this function");
+        event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_START_SUCCESS)
+      } else{
+        event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_FAILED)
+      }
+    } catch (error) {
+      console.log(error);
+      event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_FAILED)
+    }
+  }
+})
+
+// # ======= 6 Check orthanc backup folder is exists or not ============================
+ipcMain.on("study-backup-folder-handler", async(event, data) => {
+  try {
+    const response = await axios({
+      method: "GET", 
+      url: `${ORTHANC_URL}/jobs/${data?.backupJobID}/archive`, 
+      responseType: "stream"
+    });
+
+    // Construct backup path
+    let backup_study_folder = path.join(
+      BACKUP_STUDY_PATH, 
+      data?.particularStudy?.PatientMainDicomTags?.PatientName
+    );
+
+    // Ensure that the full folder structure exists
+    if (!fs.existsSync(backup_study_folder)){
+      fs.mkdirSync(backup_study_folder, { recursive: true });
+    }
+
+    let backup_study_path = path.join(backup_study_folder, `${data?.particularStudy?.ID}.zip`);
+
+    // Create write stream
+    const writer = fs.createWriteStream(backup_study_path);
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', async () => {
+        await deleteParticularStudyRequest(data?.particularStudy?.ID) ; 
+        event.reply('study-backup-folder-reply-success', FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
+        resolve({ success: true, backup_study_path });
+      });
+
+      writer.on('error', (error) => {
+          console.error("File Write Error:", error);
+          event.reply('study-backup-folder-reply', FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
+          reject(error);
+      });
+    });
+
+  } catch (error) {
+    console.error("Backup Failed:", error);
+    event.reply("study-backup-folder-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
+  }
+});

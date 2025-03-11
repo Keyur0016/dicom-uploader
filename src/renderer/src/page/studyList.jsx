@@ -3,6 +3,7 @@ import StudyInfoComponent from "../components/studyInfoComponent";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStudyList } from "../handler/study.handler";
 import Header from "../components/header";
+import { Empty } from "antd";
 
 const StudyList = () => {
     
@@ -28,6 +29,15 @@ const StudyList = () => {
                         />
                     )
                 })}
+                {studies && studies?.length == 0 && (
+                    <div style={{
+                        marginTop: "60px"
+                    }}>
+                        <Empty
+                            description = "Not found any studies"
+                        />
+                    </div>
+                )}
             </div>
         </div>
     )

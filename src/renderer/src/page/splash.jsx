@@ -1,35 +1,90 @@
 import { Flex, Spin } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_LIST } from "../constant/route.constant";
+import { FILE_OPERATION_CONSTANT } from "../constant/constant";
+import showNotification from "../handler/notification.handler";
+import { useQuery } from "@tanstack/react-query";
+import { userInformationRequest } from "../handler/user.handler";
+import { GlobalContext } from "../context/globalContext";
 
 const Splash = () => {
 
-    const [loading, setLoading] = useState(false) ; 
-    const navigation = useNavigate() ; 
+    const [loading, setLoading] = useState(false); 
+    const navigation = useNavigate(); 
 
-    // Fetch User information Request ============================
+    // User information fetch =============================================
+    const {refetch: userInformaitonFetch} = useQuery({
+        queryKey: ["user", "information", "fetch"],
+        queryFn: async () => {
+            setLoading(true);
+            const response = await userInformationRequest({
+                payload: {}, 
+                params: {
+                    is_details: true
+                }
+            }); 
+            if (response?.status){
+                localStorage.setItem("orthanc-peer-data", JSON.stringify(response?.data)) ; 
+                navigation(ROUTES_LIST.STUDYLIST_ROUTE) ; 
+            }   else {
+                navigation(ROUTES_LIST.LOGIN_ROUTE); 
+            }
+            setLoading(false);
+        }, 
+        enabled: false
+    })
+
+    // Fetch user information request ========================================================
     const fetchUserData = async () => {
         try {
             let content = await window.electronAPI.readTokenInfo() ; 
             if (!content){
                 navigation(ROUTES_LIST.LOGIN_ROUTE) ; 
             }   else {
-                navigation(ROUTES_LIST.STUDYLIST_ROUTE) ; 
+                content = JSON.parse(content) ; 
+                localStorage.setItem('token', content?.token?.accessToken) ; 
+                await userInformaitonFetch() ; 
+                // navigation(ROUTES_LIST.STUDYLIST_ROUTE) ; 
             }
         } catch (error) {
             navigation(ROUTES_LIST.LOGIN_ROUTE) ; 
         }
-        
+    }
+
+    // Move orthanc server related folder ====================================================
+    const moveOrthancFolder = async () => {
+        try {
+            await window.electronAPI.moveOrthancFolder() ;
+            window.electronAPI.moveOrthanceResponse((event, message) => {
+                if (message == FILE_OPERATION_CONSTANT.ORATANCE_SERVER_FOLDER_COPY_FAILED){
+                    showNotification("error", "Orthanc Configuration", "Failed to configure Orthanc server")
+                }
+            })
+        } catch (error) {
+            // showNotification("erorr", "Orthanc Configuration", String(error)) ; 
+        }
+    }
+
+    // Orthanc exe background related configuration ==========================================
+    const orthancExeBackgroundConfiguration = async () => {
+        try {
+            await window.electronAPI.orthanceExeHandler() ; 
+            window.electronAPI.orthanceExeReply((event, message) => {
+                if (message == FILE_OPERATION_CONSTANT.ORTHANCE_EXE_FAILED){
+                    showNotification("error", "Orthanc Configuration", "Failed to configure Orthanc server")
+                }
+            })
+        } catch (error) {
+            // showNotification("error", "Orthanc Configuration", "Failed to configure Orthanc server")
+        }
     }
 
     useEffect(() => {
+        moveOrthancFolder() ; 
+        orthancExeBackgroundConfiguration() ; 
         fetchUserData() ; 
     },[])
-
-    // useEffect(() => {
-    //     navigation("/login") ; 
-    // }, []) ; 
 
     return (
         <Spin spinning = {loading}>
