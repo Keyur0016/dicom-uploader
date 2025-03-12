@@ -112,7 +112,14 @@ const Splash = () => {
         }
     }
 
+    // Fetch orthanc setting related configuration information 
+    const fetchUploadSettingConfiguration = async () => {
+        let settingData = await window.electronAPI.readSettingInfo(); 
+        localStorage.setItem("dicom-setting", JSON.stringify(settingData?.setting))
+    }
+
     useEffect(() => {
+        fetchUploadSettingConfiguration() ; 
         moveOrthancFolder() ; 
         orthancExeBackgroundConfiguration() ; 
         fetchUserData() ; 

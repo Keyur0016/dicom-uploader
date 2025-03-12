@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Row, Col, Button, Card, Tag, Badge, Statistic, Flex, Divider, Progress, Tooltip, Spin } from "antd";
+import { Row, Col, Button, Card, Tag, Badge, Statistic, Flex, Divider, Progress, Tooltip, Spin, List } from "antd";
 import { CaretDownOutlined, CaretUpOutlined, DeleteFilled, FileImageFilled, UploadOutlined } from '@ant-design/icons';
 import { checkJobStatusRequest, deleteParticularStudyRequest, fetchParticularStudyInfoRequest, fetchParticularStudySeriesInfoRequest, seriesBackupStartRequest, studyBackupStartRequest, studyPeerStoreRequest } from "../handler/study.handler";
 import { useQuery } from "@tanstack/react-query";
@@ -14,15 +14,18 @@ import { useQueries } from "@tanstack/react-query";
 
 const StudyInfoComponent = ({studyid}) => {
 
-    const [timeCounter, setTimeCounter] = useState(100) ; 
+    const [timeCounter, setTimeCounter] = useState(undefined) ; 
     const [isExpand, setIsExpand] = useState(false) ; 
     const {studyList, setStudyList} = useContext(GlobalContext) ;
     const [backupJobID, setBackupJobID] = useState(undefined) ; 
     const [seriesBackupJobId, setSeriesBackupJobId] = useState([]) ; 
     const [seriesBackupJobSeriesInfo, setSeriesBackupJobSeriesInfo] = useState({}) ; 
+    const [totalInstanceCount, setTotalInstanceCount] = useState(0) ; 
 
     const [uploadingStatus, setUploadingStatus] = useState(undefined) ; 
     const [uploadingSeriesJobId, setUploadingSeriesJobId] = useState([]) ; 
+    const [isUploading, setIsUploading] = useState(false) ; 
+    const [isUploadingInitiate, setIsUploadingInitiate] = useState(false) ; 
 
     useEffect(() => {
         if (!studyList[studyid]){
@@ -34,7 +37,6 @@ const StudyInfoComponent = ({studyid}) => {
             }));
         }
     },[studyid])
-    
 
     const {data: particularStudy, isLoading} = useQuery({
         queryKey: ["get", "particular", "studies", {"studyid": studyid}], 
@@ -76,6 +78,16 @@ const StudyInfoComponent = ({studyid}) => {
         refetchIntervalInBackground: true
     })
 
+    useEffect(() => {
+        if (studySeries && studySeries?.length){
+            let totaL_instance = 0 ;
+            studySeries?.map((element) => {
+                totaL_instance += element?.Instances?.length ; 
+            })
+            setTotalInstanceCount(totaL_instance) ;
+        }
+    },[studySeries])
+
     // Delete button related request handler ============================
     const deleteButtonHandler = async () => {
         setStudyList((prev) => ({
@@ -88,7 +100,6 @@ const StudyInfoComponent = ({studyid}) => {
         let backupResponse = await studyBackupStartRequest(studyid) ; 
         setBackupJobID(backupResponse?.ID) ; 
     }
-    
 
     // Check particular job related status ===========================
     const {data: jobStatusResponse, isLoading: isJobStatusLoading} = useQuery({
@@ -109,7 +120,6 @@ const StudyInfoComponent = ({studyid}) => {
                     })
                 }
             }
-
             return response ; 
         }, 
         enabled: Boolean(backupJobID), 
@@ -119,7 +129,13 @@ const StudyInfoComponent = ({studyid}) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setTimeCounter((prev) => prev - 1);
+            setTimeCounter((prev) => {
+                if (prev <= 0) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
         }, 1000);
 
         return () => clearInterval(interval); // Cleanup interval on unmount
@@ -148,7 +164,6 @@ const StudyInfoComponent = ({studyid}) => {
             }
         }
     })
-
 
     const uploadHandler = async () => {
         for (const element of studySeries ?? []) {
@@ -202,9 +217,12 @@ const StudyInfoComponent = ({studyid}) => {
     // Upload study related option handler ========================================
     const uploadStudyButtonHandler = async () => {
         setUploadingStatus(SERIES_STATUS.UPLOAD_START) ; 
+        setIsUploading(true) ; 
+        setIsUploadingInitiate(true) ; 
         await uploadHandler() ; 
     }
 
+    // Particular peer store related request ===========================================
     const jobQueries = useQueries({
         queries: (uploadingSeriesJobId ?? [])?.map((job_id) => {
             return {
@@ -257,21 +275,13 @@ const StudyInfoComponent = ({studyid}) => {
         })
     });
 
-    useEffect(() => {
-        console.log(seriesBackupJobId);
-        
-    }, [seriesBackupJobId])
-
+    // Series backup related job id status check =======================================================
     const seriesBackupQueries = useQueries({
         queries: (seriesBackupJobId ?? [])?.map((jobId) => {
-            console.log("Job id", jobId);
-            
             return {
                 queryKey: ["get", "series", "backup", "job", jobId] ,
                 queryFn: async () => {
                     let response = await checkJobStatusRequest(jobId);
-                    console.log(response);
-                    
                     let job_status = response?.State ; 
                     let job_type = response?.Type ; 
                     if (job_status === JOB_STATUS.SUCCESS_STATUS){
@@ -293,6 +303,50 @@ const StudyInfoComponent = ({studyid}) => {
             }
         })
     })
+
+    // Final study status related functionality handler ===============================================
+    useEffect(() => {
+        if (seriesBackupJobId?.length == 0 ){
+            setIsUploading(false) ; 
+
+            // Check upload status 
+            let all_status = [] ;
+            studySeries?.map((element) => {
+                if (studyList?.[studyid]?.[element?.ID]?.status){
+                    all_status.push(studyList?.[studyid]?.[element?.ID]?.status)
+                }
+            })
+
+            all_status = [...new Set([...all_status])];
+            
+            if (all_status?.length == 1 && all_status[0] == SERIES_STATUS.UPLOAD_SUCCESS){
+                setUploadingStatus(SERIES_STATUS.UPLOAD_SUCCESS)
+            }   else if (all_status?.length == 1 && all_status[0] == SERIES_STATUS.UPLOAD_FAILED){
+                setUploadingStatus(SERIES_STATUS.UPLOAD_FAILED)
+            }   else {
+                // setUploadingStatus(undefined)
+            }
+            
+        }   
+    }, [seriesBackupJobId])
+
+    // Configure auto uploader time related information 
+    useEffect(() => {
+        let settingData = localStorage.getItem("dicom-setting") ; 
+        if (settingData){
+            settingData = JSON.parse(settingData) ; 
+            setTimeCounter(+settingData?.delay)
+        }   else {
+            setTimeCounter(+20)
+        }
+    },[])
+
+    // Check if timer count is zero than start auto uplaoding 
+    useEffect(() => {
+        if (timeCounter <=0){
+            uploadStudyButtonHandler() ; 
+        }
+    },[timeCounter])
 
     if (studyList?.[studyid] && studyList?.[studyid]?.status == SERIES_STATUS.NOT_DELETED){
         return (
@@ -328,21 +382,31 @@ const StudyInfoComponent = ({studyid}) => {
                                         danger 
                                         icon = {<DeleteFilled/>}
                                         onClick={() => {deleteButtonHandler()}}
+                                        disabled = {isUploadingInitiate}
                                     >
                                     </Button>
                                     
                                     <Button type="default" className="upload-study-button" icon = {<UploadOutlined/>} 
                                         onClick={() => {uploadStudyButtonHandler()}}
+                                        loading = {isUploadingInitiate}
                                     >
-                                        Upload Study
+                                        {
+                                            uploadingStatus === undefined ? "Upload Study" : 
+                                            uploadingStatus === SERIES_STATUS.UPLOAD_SUCCESS ? "Uploading Done" : 
+                                            uploadingStatus === SERIES_STATUS.UPLOAD_FAILED ? "Uploading Failed" : 
+                                            uploadingStatus === SERIES_STATUS.UPLOAD_START ? "Uploading" : ""
+                                        }
+
                                     </Button>
                                     
-                                    <div style={{
-                                        marginTop: "auto", 
-                                        marginBottom: "auto", 
-                                    }} className="timer-information">
-                                        <span className="patient-data-title">Time Remain :</span> {timeCounter}
-                                    </div>
+                                    {!isUploadingInitiate && (
+                                        <div style={{
+                                            marginTop: "auto", 
+                                            marginBottom: "auto", 
+                                        }} className="timer-information">
+                                            <span className="patient-data-title">Time Remain :</span> {timeCounter}
+                                        </div>
+                                    )}
                                 </Flex>
                             </Col>
                         </Row>
@@ -379,7 +443,7 @@ const StudyInfoComponent = ({studyid}) => {
                                 <div className="patient-data-div">
                                     <span className="patient-data-title">
                                         <Tag color="#2db7f5">Total Images</Tag>
-                                    </span> {particularStudy?.RequestedTags?.NumberOfStudyRelatedInstances ?? "0"}
+                                    </span> {totalInstanceCount ?? "0"}
                                 </div>
     
                             </Col>

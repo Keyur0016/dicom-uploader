@@ -1,7 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import icon from '../../resources/icon.png?asset'; 
+import cloudimtsIcon from "../../resources/cloudimts.png?asset" ; 
 import fs from "fs" ; 
 import fsA from 'fs-extra';
 import { fileURLToPath } from 'url';
@@ -9,9 +10,8 @@ import { FILE_OPERATION_CONSTANT, FILE_OPERATION_READ_FAILED } from '../renderer
 import { FILE_OPERATION_FAILED } from '../renderer/src/constant/constant';
 import { ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JSON_CONFIGURATION_PATH, BACKUP_STUDY_PATH } from '../renderer/src/constant/filepath.constant';
 import { spawn } from 'child_process';
-import { configureOrthancPeerRequest, deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
+import { deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
 import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
 
 // Define __dirname 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,14 +24,21 @@ function createWindow() {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon:cloudimtsIcon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false, 
       webSecurity: false, 
       nodeIntegration: true
+    }, 
+    icon: cloudimtsIcon, 
+    title: "Cloudimts Uploader", 
+    titleBarOverlay:{
+      color: "#3d5a80", 
+      symbolColor: "#FFFFFF"
     }
   })
+
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -227,7 +234,7 @@ ipcMain.on("study-series-backup-handler", async(event, data) => {
     const response = await axios({
       method: "GET", 
       url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
-      responseType: "stream"
+    responseType: "stream"
     });
 
     // Construct backup path
@@ -249,9 +256,7 @@ ipcMain.on("study-series-backup-handler", async(event, data) => {
 
     return new Promise((resolve, reject) => {
       writer.on('finish', async () => {
-        console.log("Series backup functionality done");
-        
-        await deleteParticularSeriesRequest(data?.series_id) ; 
+        // await deleteParticularSeriesRequest(data?.series_id) ; 
         event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
         resolve({ success: true, backup_study_path });
       });

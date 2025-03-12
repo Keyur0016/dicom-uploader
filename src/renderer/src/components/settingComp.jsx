@@ -74,6 +74,7 @@ const SettingComp = ({ visible, onClose, onSave }) => {
             // Set up one-time event listeners
             window.electronAPI.saveSuccess(async (event, message) => {
                 if (message === FILE_OPERATION_CONSTANT.DICOM_SETTING_FILE_SAVED) {
+                    localStorage.setItem("dicom-setting", JSON.stringify(values))
                     await updateOrthancServer();
                 }
             });
@@ -117,6 +118,7 @@ const SettingComp = ({ visible, onClose, onSave }) => {
             open={visible}
             onCancel={onClose}
             className="dicom-uploader-modal"
+            centered
             footer={[
                 <Button key="cancel" onClick={onClose}>
                     Cancel
@@ -141,6 +143,9 @@ const SettingComp = ({ visible, onClose, onSave }) => {
                     </Form.Item>
                     <Form.Item label="PORT" name="port" rules={[{ required: true, message: "Please enter PORT" }]}>
                         <Input placeholder="Enter PORT" />
+                    </Form.Item>
+                    <Form.Item label="Auto upload delay" name="delay" rules={[{ required: true, message: "Please enter auto upload delay" }]}>
+                        <Input placeholder="Enter delay" />
                     </Form.Item>
                     <Form.Item label="Folder Location" name="folderLocation" rules={[{ required: true, message: "Please enter Folder Location" }]}>
                         <Input placeholder="Enter Folder Location" />

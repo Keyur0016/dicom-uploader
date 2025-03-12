@@ -76,44 +76,49 @@ const StudyUpload = () => {
     }, [fileList]); 
 
     const UploadImageHandler = async () => {
-        const ORTHANC_URL = "http://127.0.0.1:8042/";
-    
-        const uploadPromises = fileList.map(async (element) => {
-            const formData = new FormData();
-            formData.append("file", element?.originFileObj);
-            try {
-                const response = await fetch(`${ORTHANC_URL}instances/`, {
-                    method: "POST",
-                    body: formData,
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
+
+        if (fileList?.length == 0){
+            showNotification("warning", "Please provide at least one DICOM image for upload")
+        }   else {
+            const ORTHANC_URL = "http://127.0.0.1:8042/";
+            const uploadPromises = fileList.map(async (element) => {
+                const formData = new FormData();
+                formData.append("file", element?.originFileObj);
+                try {
+                    const response = await fetch(`${ORTHANC_URL}instances/`, {
+                        method: "POST",
+                        body: formData,
+                    });
+        
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error! Status: ${response.status}`);
+                    }
+                    return "success";
+                } catch (error) {
+                    console.error("Upload Failed:", error);
+                    return "failure";
                 }
-                return "success";
-            } catch (error) {
-                console.error("Upload Failed:", error);
-                return "failure";
+            });
+        
+            // Wait for all uploads to finish
+            const results = await Promise.all(uploadPromises);
+        
+            // Count success & failure
+            const successCount = results.filter((res) => res === "success").length;
+            const failureCount = results.filter((res) => res === "failure").length;
+        
+            if (successCount === fileList.length) {
+                showNotification("success", 'Image Upload', "All Image uploaded successfully")
+                setFileList([]) ; 
+                setPatientInformation(undefined) ; 
+                navigation("/studylist") ; 
+            } else {
+                showNotification("error", "Image Upload", `An error occurred while uploading ${failureCount} images.`)
+                setFileList([]) ; 
+                setPatientInformation(undefined) ; 
             }
-        });
-    
-        // Wait for all uploads to finish
-        const results = await Promise.all(uploadPromises);
-    
-        // Count success & failure
-        const successCount = results.filter((res) => res === "success").length;
-        const failureCount = results.filter((res) => res === "failure").length;
-    
-        if (successCount === fileList.length) {
-            showNotification("success", 'Image Upload', "All Image uploaded successfully")
-            setFileList([]) ; 
-            setPatientInformation(undefined) ; 
-            navigation("/studylist") ; 
-        } else {
-            showNotification("error", "Image Upload", `An error occurred while uploading ${failureCount} images.`)
-            setFileList([]) ; 
-            setPatientInformation(undefined) ; 
         }
+
     };
     
 

@@ -5,6 +5,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { LogoutOutlined } from "@ant-design/icons";
 import SettingComp from "./settingComp";
 import { useNavigate } from "react-router-dom";
+import { ROUTES_LIST } from "../constant/route.constant";
 
 const items = [
     {
@@ -28,14 +29,17 @@ const Header = ({isUpload}) => {
     return(
         <Flex className="header-div" gap={10}>
 
-            <Button style={{
-                marginTop: "auto", 
-                marginBottom: "auto"
-            }}
-                type="primary"
-                icon = {<BackwardFilled/>}
-            >
-            </Button>
+            {window.location.pathname !== ROUTES_LIST.STUDYLIST_ROUTE && (
+                <Button style={{
+                    marginTop: "auto", 
+                    marginBottom: "auto"
+                }}
+                    type="primary"
+                    icon = {<BackwardFilled/>}
+                    onClick={() => {navigation(-1)}}
+                >
+                </Button>
+            )}
 
             <Button icon = {<SettingOutlined/>} style={{
                 marginTop: 'auto', 
@@ -46,7 +50,7 @@ const Header = ({isUpload}) => {
                 Settings
             </Button>  
 
-            {window.location.pathname !== "/studyupload" && (
+            {window.location.pathname !== ROUTES_LIST.STUDYUPLOAD_ROUTE && (
                 <Button icon = {<UploadOutlined/>} style={{
                     marginTop: "auto", 
                     marginBottom: "auto"
