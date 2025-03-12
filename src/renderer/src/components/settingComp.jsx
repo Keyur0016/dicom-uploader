@@ -53,7 +53,7 @@ const SettingComp = ({ visible, onClose, onSave }) => {
                     })
                 }
                 return response;
-            }   else {
+        }   else {
 
             }
         },

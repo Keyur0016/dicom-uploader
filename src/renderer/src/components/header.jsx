@@ -30,7 +30,7 @@ const Header = ({isUpload}) => {
     useEffect(() => {
         let userData = localStorage.getItem("orthanc-peer-data") ; 
         if (userData){
-            console.log(userData);
+            console.log(JSON.parse(userData)?.institution_id);
             setUserInformation(JSON.parse(userData)) ; 
         }
     }, [])
