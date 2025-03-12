@@ -9,7 +9,6 @@ const StudyList = () => {
     
     // Fetch study list ==========================
     const {data: studies, isLoading} = useQuery({
-        
         queryKey: ["get", "studies", "list"],
         queryFn: async () => {
             let response = await fetchStudyList() ; 

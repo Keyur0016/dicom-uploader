@@ -22,7 +22,7 @@ const LoginPage = () => {
                 window.electronAPI.saveSuccess((event, message) => {
                     if (message == FILE_OPERATION_CONSTANT.TOKEN_FILE_SAVED){
                         showNotification("success", "Login", "Login Successfully") ; 
-                        navigation(ROUTES_LIST.STUDYLIST_ROUTE)
+                        navigation(ROUTES_LIST.SPLASH_ROUTE)
                     }
                 });
                 

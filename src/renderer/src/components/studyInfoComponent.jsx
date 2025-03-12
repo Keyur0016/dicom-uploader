@@ -60,14 +60,16 @@ const StudyInfoComponent = ({studyid}) => {
             let response = await fetchParticularStudySeriesInfoRequest(studyid) ; 
             setStudyList((prevStudyList) => {
                 const updatedStudyList = { ...prevStudyList };
-                response?.forEach((element) => {
-                    if (!updatedStudyList[studyid][element?.ID]) {
-                        updatedStudyList[studyid][element?.ID] = {
-                            "metadata": element,
-                            "status": SERIES_STATUS.UPLOAD_PENDING
-                        };
-                    }
-                });
+                if (response?.length > 0){
+                    response?.forEach((element) => {
+                        if (!updatedStudyList[studyid][element?.ID]) {
+                            updatedStudyList[studyid][element?.ID] = {
+                                "metadata": element,
+                                "status": SERIES_STATUS.UPLOAD_PENDING
+                            };
+                        }
+                    });
+                }
             
                 return updatedStudyList;
             });
@@ -456,7 +458,7 @@ const StudyInfoComponent = ({studyid}) => {
                         }}/>
     
                         {/* Particular Study series information related status information  */}
-                        {studySeries && studySeries?.map((element, index) => {
+                        {studySeries && studySeries?.length > 0 && studySeries?.map((element, index) => {
                             return(
                                 <StudySeriesInfoComp
                                     seriesId={element?.ID}

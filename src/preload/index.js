@@ -29,6 +29,7 @@ if (process.contextIsolated) {
       backupFolderReply: (callback) => ipcRenderer.on("study-backup-folder-reply", callback), 
       SeriesBackupFolderReply: (callback) => ipcRenderer.on("study-series-backup-reply", callback), 
       studyBackupSuccess: (callBack) => ipcRenderer.on('study-backup-folder-reply-success', callBack) ,
+      applicationReload: () => ipcRenderer.send("application-reload")
 
     })
   } catch (error) {

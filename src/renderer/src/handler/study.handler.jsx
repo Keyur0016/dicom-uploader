@@ -147,3 +147,15 @@ const studyPeerStoreRequest = async (payload, cloudPeer) => {
     return response ; 
 }
 export {studyPeerStoreRequest} ; 
+
+
+const jobDeleteRequest = async (id) => {
+    let response = await fetch(`${ORTHANC_URL}jobs/${id}`, {
+        method: "DELETE", 
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+    return response ; 
+}
+export {jobDeleteRequest} ; 

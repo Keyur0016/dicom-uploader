@@ -12,6 +12,8 @@ import { ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JS
 import { spawn } from 'child_process';
 import { deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
 import axios from 'axios';
+import { autoUpdater } from 'electron';
+import { jobDeleteRequest } from '../renderer/src/handler/study.handler';
 
 // Define __dirname 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,7 +58,21 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // Check for auto updaters
+  autoUpdater.checkForUpdatesAndNotify() ; 
 }
+
+// Auto-update event handlers
+autoUpdater.on("update-available", () => {
+  log.info("Update available.");
+  dialog.showMessageBox({
+      type: "info",
+      title: "Update Available",
+      message: "A new version is available. Downloading now...",
+  });
+});
+
 
 // JSON File Path
 const settingJsonFilePath = path.join(app.getPath("userData"), "setting.json") ; 
@@ -209,6 +225,7 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
     return new Promise((resolve, reject) => {
       writer.on('finish', async () => {
         await deleteParticularStudyRequest(data?.particularStudy?.ID) ; 
+        await jobDeleteRequest(data?.backupJobID)
         event.reply('study-backup-folder-reply-success', FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
         resolve({ success: true, backup_study_path });
       });
@@ -229,8 +246,6 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
 // # ======= 7 Study series wise backup related functionality handler ==================
 ipcMain.on("study-series-backup-handler", async(event, data) => {
   try {
-    console.log("Comes inside this function");
-    
     const response = await axios({
       method: "GET", 
       url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
@@ -256,7 +271,8 @@ ipcMain.on("study-series-backup-handler", async(event, data) => {
 
     return new Promise((resolve, reject) => {
       writer.on('finish', async () => {
-        // await deleteParticularSeriesRequest(data?.series_id) ; 
+        await deleteParticularSeriesRequest(data?.series_id) ; 
+        await jobDeleteRequest(data?.backupJobID) ; 
         event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
         resolve({ success: true, backup_study_path });
       });
@@ -269,8 +285,16 @@ ipcMain.on("study-series-backup-handler", async(event, data) => {
     });
 
   } catch (error) {
-    console.log(error);
-    
     event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED)
+  }
+})
+
+// ===== 8 Restart application related handler 
+
+ipcMain.on("application-reload", async(event) => {
+  try {
+    app.relaunch(); 
+  } catch (error) {
+    
   }
 })

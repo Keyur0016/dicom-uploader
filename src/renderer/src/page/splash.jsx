@@ -50,6 +50,8 @@ const Splash = () => {
                     is_details: true
                 }
             }); 
+            console.log(response);
+            
             if (response?.status){
                 localStorage.setItem("orthanc-peer-data", JSON.stringify(response?.data)) ; 
                 await configuredPeer({
