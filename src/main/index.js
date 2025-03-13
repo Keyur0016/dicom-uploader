@@ -41,6 +41,8 @@ function createWindow() {
     }
   })
 
+  mainWindow.setTitle("Cloudimts Uploader")
+
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -91,6 +93,10 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+  
+  app.name = "Cloudimts Uploader"
+  console.log(app.getName());
+  
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
