@@ -22,8 +22,8 @@ const __dirname = path.dirname(__filename);
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1100,
+    height: 750,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon:cloudimtsIcon } : {}),
@@ -33,12 +33,6 @@ function createWindow() {
       webSecurity: false, 
       nodeIntegration: true
     }, 
-    icon: cloudimtsIcon, 
-    title: "Cloudimts Uploader", 
-    titleBarOverlay:{
-      color: "#3d5a80", 
-      symbolColor: "#FFFFFF"
-    }
   })
 
   mainWindow.setTitle("Cloudimts Uploader")
@@ -170,8 +164,6 @@ ipcMain.on("orthanc-server-handle", async (event) => {
       await fsA.copy(ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER) ; 
       event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORTAHNCE_SERVER_FOLDER_COPY)
     } catch (error) {
-      console.log(error);
-      
       event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORATANCE_SERVER_FOLDER_COPY_FAILED)
     }  
   }
@@ -190,13 +182,11 @@ ipcMain.on("orthanc-exe-configure", async(event) => {
         windowsHide: true
       }); 
       if (process.pid){
-        console.log("Run this function");
         event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_START_SUCCESS)
       } else{
         event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_FAILED)
       }
     } catch (error) {
-      console.log(error);
       event.reply("orthanc-exe-reply", FILE_OPERATION_CONSTANT.ORTHANCE_EXE_FAILED)
     }
   }
@@ -210,9 +200,6 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
       url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
       responseType: "stream"
     });
-    console.log("Backup response");
-    console.log(response);
-    
     
     // let settingData = localStorage.getItem("dicom-setting") ; 
     // if (settingData){
@@ -224,10 +211,6 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
       "C://cloudimts-uploader", 
       data?.particularStudy?.PatientMainDicomTags?.PatientName
     );
-
-    console.log("Backup folder =======================");
-    console.log(backup_study_folder);
-    
 
     // Ensure that the full folder structure exists
     if (!fs.existsSync(backup_study_folder)){
@@ -249,14 +232,12 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
       });
 
       writer.on('error', (error) => {
-          console.error("File Write Error:", error);
           event.reply('study-backup-folder-reply', FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
           reject(error);
       });
     });
 
   } catch (error) {
-    console.error("Backup Failed:", error);
     event.reply("study-backup-folder-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED);
   }
 });
