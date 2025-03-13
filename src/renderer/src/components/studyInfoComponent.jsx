@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { Row, Col, Button, Card, Tag, Badge, Statistic, Flex, Divider, Progress, Tooltip, Spin, List } from "antd";
 import { CaretDownOutlined, CaretUpOutlined, DeleteFilled, FileImageFilled, UploadOutlined } from '@ant-design/icons';
 import { checkJobStatusRequest, deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchParticularStudyInfoRequest, fetchParticularStudySeriesInfoRequest, jobDeleteRequest, seriesBackupStartRequest, studyBackupStartRequest, studyPeerStoreRequest } from "../handler/study.handler";
@@ -12,21 +12,33 @@ import { insertNewStudiesDataRequest, insertStudyUploadTimeInfoRequest } from ".
 import moment from "moment";
 import { useQueries } from "@tanstack/react-query";
 
-const StudyInfoComponent = ({studyid, userInformation}) => {
+const StudyInfoComponent = ({studyid, userInformation, setCacheStudyList}) => {
+
+    const studyBackupRun = useRef(false); 
 
     // **** State **** // 
     const [timeCounter, setTimeCounter] = useState(undefined) ; 
     const [isExpand, setIsExpand] = useState(false) ; 
     const {studyList, setStudyList} = useContext(GlobalContext) ;
     const [backupJobID, setBackupJobID] = useState(undefined) ; 
-    const [seriesBackupJobId, setSeriesBackupJobId] = useState([]) ; 
     const [totalInstanceCount, setTotalInstanceCount] = useState(0) ; 
     const [studySeriesList, setStudySeriesList] = useState([]) ; 
+
+    // **** Study backup related functionality handler *** // 
+    const [studyBackupJobId, setStudyBackupJobId] = useState(undefined);
+    const [studyBackupRefetch, setStudyBackupRefetch] = useState(0) ; 
+    const [studyBackupInstanceCount, setStudyBackupInstanceCount] = useState(0) ;
+
+    // **** Store particular series once bakup done ***** // 
+    const [seriesDeleteQueue, setSeriesDeleteQueue] = useState([]) ; 
 
     const [uploadingStatus, setUploadingStatus] = useState(undefined) ; 
     const [uploadingSeriesJobId, setUploadingSeriesJobId] = useState([]) ; 
     const [isUploading, setIsUploading] = useState(false) ; 
     const [isUploadingInitiate, setIsUploadingInitiate] = useState(false) ; 
+
+    // **** Delete study related handler **** // 
+    const [isDeleteInitiate, setIsDeleteInitiate] = useState(false) ; 
 
     // Configure auto upload delay related information //
     useEffect(() => {
@@ -127,46 +139,125 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
         return () => clearInterval(interval); // Cleanup interval on unmount
     }, []);
 
+
+    // ************* Delete study button related option handler ************* // 
     useEffect(() => {
-        if (timeCounter <=0){
-            uploadStudyButtonHandler() ; 
-        }
-    },[timeCounter])
-
-    // ****** Delete study related option handler 
-    const deleteButtonHandler = async () => {
-        setStudyList((prev) => ({
-            ...prev, 
-            [studyid]: {
-                ...prev[studyid], 
-                status: SERIES_STATUS.DELETE, 
+        const handleDelete = async () => {
+            if (studyList?.[studyid]?.status && isDeleteInitiate) {
+                if (studyList[studyid].status === SERIES_STATUS.BACKUP_DONE) {
+                    setStudyList((prev) => ({
+                        ...prev,
+                        [studyid]: {
+                            ...prev[studyid],
+                            status: SERIES_STATUS.DELETE,
+                        },
+                    }));
+                    await deleteParticularStudyRequest(studyid);
+                    showNotification("success", "Study Deleted", "Study has been deleted successfully");
+                    
+                    setCacheStudyList((prev) => {
+                        const updatedList = { ...prev };
+                        delete updatedList[studyid]; // Remove the key from the object
+                        return updatedList;
+                    });
+                }
             }
-        }));
-        let backupResponse = await studyBackupStartRequest(studyid) ; 
-        setBackupJobID(backupResponse?.ID) ; 
-    }
+        };
+    
+        handleDelete(); 
+    }, [isDeleteInitiate, studyList, studyid]); 
+    
+    // ****** Start study backup when received study information ****** // 
+    useEffect(() => {
+        if (studyid && !studyBackupRun.current){
+            studyBackupRun.current = true ; 
+            const startBackup = async () => {
+                await new Promise(resolve => setTimeout(resolve, 5000)); // Delay for 5 seconds
+                try {
+                    let backupResponse = await studyBackupStartRequest(studyid);
+                    setStudyBackupJobId(backupResponse?.ID);
+                } catch (error) {
+                    console.error("Error starting backup:", error);
+                }
+            };
+            startBackup(); // Call the async function
+        }
+    }, [studyid, studyBackupRefetch]);
+    
 
-    const {data: jobStatusResponse, isLoading: isJobStatusLoading} = useQuery({
-        queryKey: ["get", "particular", "job", 'status', {"job_id": backupJobID}], 
+    // Check particular study job backup status when user click on DELETE STUDY // 
+    const { data: jobStatusResponse, isLoading: isJobStatusLoading } = useQuery({
+        queryKey: ["get", "particular", "job", "status", backupJobID], 
         queryFn: async () => {
-            let response = await checkJobStatusRequest(backupJobID);
-            let job_status = response?.State; 
+            const response = await checkJobStatusRequest(backupJobID);
+            return response; 
+        },
+        enabled: Boolean(backupJobID),
+        refetchInterval: 1500,
+        refetchIntervalInBackground: true,
+    });
+    
+    useEffect(() => {
+        if (jobStatusResponse?.State === JOB_STATUS.SUCCESS_STATUS && jobStatusResponse?.Type === JOB_TYPE.ARCHIVE_TYPE) {
+            (async () => {
+                try {
+                    setBackupJobID(undefined); 
+                    await window.electronAPI.backUpFolderHandler({ backupJobID, particularStudy });
+    
+                    window.electronAPI.studyBackupSuccess(async (event, message) => {
+                        showNotification("success", "Study Delete", message);
+                        await deleteParticularStudyRequest(studyid);
+                    });
+    
+                    window.electronAPI.backupFolderReply((event, message) => {
+                        showNotification("error", "Study Delete", message);
+                    });
+                } catch (error) {
+                    console.error("Error handling backup success:", error);
+                }
+            })();
+        }
+    }, [jobStatusResponse, backupJobID, particularStudy, studyid]);
+    
+    
+    // Check particular study backup status related job 
+    const {data: studyBackupJobData} = useQuery({
+        queryKey: ["get", "particular", "job", 'status', {"job_id": studyBackupJobId}], 
+        queryFn: async () => {
+            let response = await checkJobStatusRequest(studyBackupJobId);
+            let job_status = response?.State;
             let job_type = response?.Type ; 
+            let job_backup_instance_count = response?.Content?.InstancesCount ; 
+            setStudyBackupInstanceCount(job_backup_instance_count) ; 
             if (job_status == JOB_STATUS.SUCCESS_STATUS){
                 if (job_type == JOB_TYPE.ARCHIVE_TYPE){
-                    setBackupJobID(undefined) ; 
-                    await window.electronAPI.backUpFolderHandler({backupJobID, particularStudy}) ;
-                    window.electronAPI.studyBackupSuccess((event, message) => {
-                        showNotification("success", "Study Delete", message) ; 
-                    })
-                    window.electronAPI.backupFolderReply((event, message) => {
-                        showNotification("error", "Study Delete", message) ; 
-                    })
+
+                    if (+job_backup_instance_count === +totalInstanceCount){
+                        setStudyList((prev) => ({
+                            ...prev,
+                            [studyid]: {
+                                ...(prev?.[studyid] || {}), // Ensure `prev[studyid]` exists
+                                status: SERIES_STATUS.BACKUP_DONE,
+                            },
+                        }));
+                    }   else {
+                        setStudyBackupRefetch((prev) => prev + 1) ; 
+                        studyBackupRun.current = false ; 
+                    }
+
+
+                    await window.electronAPI.backUpFolderHandler({backupJobID : studyBackupJobId, particularStudy}) ;
+                    window.electronAPI.studyBackupSuccess(async (event, message) => {
+                        setStudyBackupJobId(undefined) ; 
+                    });
+                    window.electronAPI.backupFolderReply(async (event, message) => {
+                        setStudyBackupJobId(undefined) ; 
+                    });
                 }
             }
             return response ; 
         }, 
-        enabled: Boolean(backupJobID), 
+        enabled: Boolean(studyBackupJobId), 
         refetchInterval: 1500, 
         refetchIntervalInBackground: true
     }) ; 
@@ -194,7 +285,8 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
             }
         }
     })
-
+    
+    // ****************************** Study upload button click handler ******************************* // 
     const uploadHandler = async () => {
         for (const element of studySeries ?? []) {
             const seriesData = studyList?.[studyid]?.[element?.ID];
@@ -229,7 +321,7 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
                               ...prev[studyid],
                               [element?.ID]: {
                                 ...prev[studyid]?.[element?.ID],
-                                // status: SERIES_STATUS.UPLOAD_START,
+                                status: SERIES_STATUS.UPLOAD_START,
                                 jobID: response?.ID,
                                 uploadPercentage: 0, 
                                 cloudimts_series_id : response?.series, 
@@ -245,14 +337,43 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
             }
         }
     };
-    
-    // ***** Upload study related button handler ****** // 
+
     const uploadStudyButtonHandler = async () => {
         setUploadingStatus(SERIES_STATUS.UPLOAD_START) ; 
         setIsUploading(true) ; 
-        setIsUploadingInitiate(true) ; 
         await uploadHandler() ; 
     }
+    
+    const [hasTriggeredUpload, setHasTriggeredUpload] = useState(false);
+    useEffect(() => {
+        if (!hasTriggeredUpload && !isDeleteInitiate && (isUploadingInitiate || timeCounter <= 0)) {
+            setIsUploadingInitiate(true);
+            uploadStudyButtonHandler();
+            setHasTriggeredUpload(true);
+        }
+    }, [timeCounter, isUploadingInitiate, isDeleteInitiate, hasTriggeredUpload]);
+
+    // ***** Delete particular seriesDeleteQueue related handler ***** // 
+    const SeriesDeleteHandler = async () => {
+        if (seriesDeleteQueue?.length > 0) {
+            const updatedQueue = [...seriesDeleteQueue]; // Clone the queue to avoid modifying state in the loop
+            for (const seriesId of seriesDeleteQueue) {
+                await deleteParticularSeriesRequest(seriesId);
+                const index = updatedQueue.indexOf(seriesId);
+                if (index !== -1) updatedQueue.splice(index, 1); // Remove seriesId after deletion
+            }
+            setSeriesDeleteQueue(updatedQueue); // Update state once after loop
+        }
+    };
+    useEffect(() => {
+        if (
+            studyList?.[studyid]?.status === SERIES_STATUS.BACKUP_DONE &&
+            seriesDeleteQueue?.length > 0
+        ) {
+            SeriesDeleteHandler();
+        }
+    }, [seriesDeleteQueue, studyList, studyid]);
+    
 
     // ****** Check all peer store related job status related information 
     const jobQueries = useQueries({
@@ -271,8 +392,9 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
                             // ***** Update uploading series job id
                             setUploadingSeriesJobId((prev) => prev?.filter((item) => item != job_id))
 
-                            // ***** Delete particular study series
-                            await deleteParticularSeriesRequest(job_series_id)
+                            // ***** Add particular series id to seriesDeleteQueue
+                            setSeriesDeleteQueue((prev) => ([...prev, job_series_id]))
+                            // await deleteParticularSeriesRequest(job_series_id)
 
                             // ***** Delete partciular job information
                             await jobDeleteRequest(job_id)
@@ -341,7 +463,7 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
     }, [uploadingSeriesJobId, studySeriesList, studyList, studyid]);
     
 
-    if (studyList?.[studyid] && studyList?.[studyid]?.status == SERIES_STATUS.NOT_DELETED){
+    if (studyList?.[studyid] && (studyList?.[studyid]?.status == SERIES_STATUS.NOT_DELETED || studyList?.[studyid]?.status == SERIES_STATUS.BACKUP_DONE)){
         return (
             <Badge.Ribbon text = {`Total series: ${studySeriesList?.length ?? 0}`} placement="end">
                 <Card className={`study-info-comp ${!isExpand?`study-info-comp-collapsed`:``} 
@@ -353,7 +475,7 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
                 `}
                     style={{height: isExpand?"auto":"230px"}}
                 >
-                    <Spin spinning = {isLoading}>
+                    <Spin spinning = {isLoading || isDeleteInitiate}>
     
                         <Row gutter={[16, 16]} align="middle">
                             <Col span={24}>
@@ -374,14 +496,21 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
                                     <Button 
                                         danger 
                                         icon = {<DeleteFilled/>}
-                                        onClick={() => {deleteButtonHandler()}}
-                                        disabled = {isUploadingInitiate}
+                                        onClick={() => {
+                                            setIsDeleteInitiate(true) ; 
+                                        }}
+                                        disabled = {isUploadingInitiate || isDeleteInitiate}
+                                        isLoading = {isDeleteInitiate}
                                     >
                                     </Button>
                                     
                                     <Button type="default" className="upload-study-button" icon = {<UploadOutlined/>} 
-                                        onClick={() => {uploadStudyButtonHandler()}}
+                                        onClick={() => {
+                                            setIsUploading(true) ; 
+                                            setIsUploadingInitiate(true) ; 
+                                        }}
                                         loading = {isUploadingInitiate}
+                                        disabled = {isDeleteInitiate}
                                     >
                                         {
                                             uploadingStatus === undefined ? "Upload Study" : 
@@ -392,7 +521,7 @@ const StudyInfoComponent = ({studyid, userInformation}) => {
 
                                     </Button>
                                     
-                                    {!isUploadingInitiate && (
+                                    {!isUploadingInitiate && !isDeleteInitiate && (
                                         <div style={{
                                             marginTop: "auto", 
                                             marginBottom: "auto", 

@@ -204,12 +204,24 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
       url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
       responseType: "stream"
     });
+    console.log("Backup response");
+    console.log(response);
+    
+    
+    // let settingData = localStorage.getItem("dicom-setting") ; 
+    // if (settingData){
+    //   settingData = JSON.parse(settingData) ; 
+    // }
 
     // Construct backup path
     let backup_study_folder = path.join(
-      BACKUP_STUDY_PATH, 
+      "C://cloudimts-uploader", 
       data?.particularStudy?.PatientMainDicomTags?.PatientName
     );
+
+    console.log("Backup folder =======================");
+    console.log(backup_study_folder);
+    
 
     // Ensure that the full folder structure exists
     if (!fs.existsSync(backup_study_folder)){
@@ -224,7 +236,7 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
 
     return new Promise((resolve, reject) => {
       writer.on('finish', async () => {
-        await deleteParticularStudyRequest(data?.particularStudy?.ID) ; 
+        // await deleteParticularStudyRequest(data?.particularStudy?.ID) ; 
         await jobDeleteRequest(data?.backupJobID)
         event.reply('study-backup-folder-reply-success', FILE_OPERATION_CONSTANT.STUDY_DELETE_SUCCESS);
         resolve({ success: true, backup_study_path });
@@ -286,15 +298,5 @@ ipcMain.on("study-series-backup-handler", async(event, data) => {
 
   } catch (error) {
     event.reply("study-series-backup-reply", FILE_OPERATION_CONSTANT.BACKUP_FOLDER_CREATE_FAILED)
-  }
-})
-
-// ===== 8 Restart application related handler 
-
-ipcMain.on("application-reload", async(event) => {
-  try {
-    app.relaunch(); 
-  } catch (error) {
-    
   }
 })

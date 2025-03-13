@@ -8,7 +8,7 @@ import { Empty } from "antd";
 const StudyList = () => {
 
     const [userInformation, setUserInformation] = useState(undefined) ; 
-    const [studyList, setStudyList] = useState([]) ; 
+    const [cacheStudyList, setCacheStudyList] = useState([]) ; 
     
     // Fetch study list ==========================
     const {data: studies, isLoading} = useQuery({
@@ -22,10 +22,12 @@ const StudyList = () => {
     })
 
     useEffect(() => {
-        if (studies?.length > studyList?.length){
-            setStudyList(studies) ; 
+        if (studies?.length > cacheStudyList?.length){
+            setCacheStudyList(studies) ; 
         }
     }, [studies])
+
+    // useEffect(() => )
 
     // Set user information ==================
     useEffect(() => {
@@ -39,15 +41,16 @@ const StudyList = () => {
     return(
         <div className="main-div">
             <div className="study-list-div">
-                {studyList && studyList?.map((element) => {
+                {cacheStudyList && cacheStudyList?.map((element) => {
                     return(
                         <StudyInfoComponent
                             studyid={element}
                             userInformation={userInformation}
+                            setCacheStudyList = {setCacheStudyList}
                         />
                     )
                 })}
-                {studyList && studyList?.length == 0 && (
+                {cacheStudyList && cacheStudyList?.length == 0 && (
                     <div style={{
                         marginTop: "60px"
                     }}>
