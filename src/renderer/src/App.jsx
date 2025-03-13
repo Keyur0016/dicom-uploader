@@ -10,6 +10,7 @@ import Splash from "./page/splash";
 import BaseLayout from "./page/baseLayout";
 import { ROUTES_LIST } from "./constant/route.constant";
 import { GlobalProvider } from "./context/globalContext";
+import StudyUploadHistory from "./page/studyUploadHistory";
 
 function App() {
   // Configure Ant Design notifications when the component mounts.
@@ -54,6 +55,10 @@ function App() {
     {
       path: ROUTES_LIST.STUDYUPLOAD_ROUTE, 
       element: <BaseLayout element={<StudyUpload/>} />
+    },
+    {
+      path: ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE, 
+      element: <BaseLayout element={<StudyUploadHistory/>} />
     }
   ])
 

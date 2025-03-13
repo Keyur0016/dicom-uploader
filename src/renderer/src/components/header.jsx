@@ -6,6 +6,7 @@ import { LogoutOutlined } from "@ant-design/icons";
 import SettingComp from "./settingComp";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_LIST } from "../constant/route.constant";
+import { HistoryOutlined } from "@ant-design/icons";
 
 const items = [
     {
@@ -64,29 +65,25 @@ const Header = ({isUpload}) => {
                     marginTop: "auto", 
                     marginBottom: "auto"
                 }} onClick={() => {
-                    navigation("/studyupload")
+                    navigation(ROUTES_LIST.STUDYUPLOAD_ROUTE)
                 }}>
                     Upload
                 </Button>
             )}
 
+            {window.location.pathname !== ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE && (
+                <div className="upload-history-button"
+                    onClick={() => {
+                        navigation(ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE)
+                    }}
+                >
+                    <HistoryOutlined/>
+                </div>
+            )}
+
             {/* User profile related information  */}
             <div style={{marginLeft: "auto", marginTop: "auto"}}>
                 <Flex gap={10}>
-                    
-                    {/* Reload application related option handler  */}
-                    {/* <Popconfirm
-                        title = {"Application Reload"}
-                        description = {"Are you sure you want to reload uploader"}
-                        onConfirm={() => {
-                            ApplicationReloadHandler() ; 
-                        }}
-                    >
-                        <Button 
-                            icon = {<ReloadOutlined/>} 
-                            style={{marginTop: "auto", marginBottom: "auto"}}
-                        />
-                    </Popconfirm> */}
 
                     {/* User related information  */}
                     <Flex style={{
@@ -110,7 +107,7 @@ const Header = ({isUpload}) => {
                             }}>Role :</span> {userInformation?.role || "---"}
                         </div>
                     </Flex>
-
+                        
                     <Dropdown
                         menu={{
                             items: items, 
@@ -122,6 +119,7 @@ const Header = ({isUpload}) => {
                             className="profile-image"
                         />
                     </Dropdown>
+
                 </Flex>
             </div>
 

@@ -19,3 +19,8 @@ const insertStudyUploadTimeInfoRequest = async (payload) => {
     return apiHandler.post("/studies/v1/insert_study_time", payload) ; 
 }
 export {insertStudyUploadTimeInfoRequest} ; 
+
+const getUserUploadHistoryRequest = async (params) => {
+    return apiHandler.get(`/studies/v1/study_upload_history`, params) ; 
+}
+export {getUserUploadHistoryRequest} ; 

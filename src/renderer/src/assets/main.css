@@ -364,3 +364,36 @@ body{
   font-size: 14px;
   font-weight: 600;
 }
+
+.upload-history-button{
+  font-size: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+
+.study-upload-history-div{
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  height: calc(100vh - 60px);
+  overflow-y: hidden;
+}
+
+.study-upload-history-table{
+  height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+.cloudimts-uploader-table .ant-table-thead .ant-table-cell{
+  background-color: #304768;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.study-upload-history-title{
+  color: #000000;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
