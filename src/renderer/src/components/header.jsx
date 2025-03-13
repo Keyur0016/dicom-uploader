@@ -21,7 +21,6 @@ const Header = ({isUpload}) => {
     useEffect(() => {
         let userData = localStorage.getItem("orthanc-peer-data") ; 
         if (userData){
-            console.log(JSON.parse(userData)?.institution_id);
             setUserInformation(JSON.parse(userData)) ; 
         }
     }, []) ; 
@@ -39,6 +38,7 @@ const Header = ({isUpload}) => {
         
         // Store empty json object when user click on loogut 
         window.electronAPI.saveTokenInfo({}) ; 
+        localStorage.removeItem("token") ;
 
         await userLogoutRequest() ; 
         showNotification("success", "Logout", "You have successfully logged out from the uploader")
