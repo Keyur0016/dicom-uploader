@@ -24,3 +24,8 @@ const getUserUploadHistoryRequest = async (params) => {
     return apiHandler.get(`/studies/v1/study_upload_history`, params) ; 
 }
 export {getUserUploadHistoryRequest} ; 
+
+const getuserLogoutRequest = async () => {
+    return apiHandler.post(`/user/v1/user-logout`, {}) ; 
+}
+export {getuserLogoutRequest} ; 

@@ -7,20 +7,10 @@ import SettingComp from "./settingComp";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_LIST } from "../constant/route.constant";
 import { HistoryOutlined } from "@ant-design/icons";
-
-const items = [
-    {
-        key: "1",
-        label: (
-            <Button
-                icon =  {<LogoutOutlined/>}
-                danger
-            >
-                Logout
-            </Button>
-        ),
-    },
-];
+import { useMutation } from "@tanstack/react-query";
+import { userLoginRequest } from "../handler/user.handler";
+import showNotification from "../handler/notification.handler";
+import { getuserLogoutRequest } from "../handler/user.handler";
 
 const Header = ({isUpload}) => {
 
@@ -34,7 +24,44 @@ const Header = ({isUpload}) => {
             console.log(JSON.parse(userData)?.institution_id);
             setUserInformation(JSON.parse(userData)) ; 
         }
-    }, [])
+    }, []) ; 
+
+    // User loogut request
+    const {mutateAsync: userLogoutRequest, isPending } = useMutation({
+        mutationKey: ["user", "logout", "request"],
+        mutationFn: async () => {
+            let response = await getuserLogoutRequest({}) ; 
+            return response ; 
+        }
+    })
+
+    const LogoutOptionHandler = async () => {
+        
+        // Store empty json object when user click on loogut 
+        window.electronAPI.saveTokenInfo({}) ; 
+
+        await userLogoutRequest() ; 
+        showNotification("success", "Logout", "You have successfully logged out from the uploader")
+
+        navigation(ROUTES_LIST.LOGIN_ROUTE) ; 
+
+    }
+
+    const items = [
+        {
+            key: "1",
+            label: (
+                <Button
+                    icon =  {<LogoutOutlined/>}
+                    danger
+                    onClick={() => {LogoutOptionHandler()}}
+                    loading = {isPending}
+                >
+                    Logout
+                </Button>
+            ),
+        },
+    ];
 
     return(
         <Flex className="header-div" gap={10}>
