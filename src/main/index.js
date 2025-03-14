@@ -89,14 +89,9 @@ app.whenReady().then(() => {
   })
   
   app.name = "Cloudimts Uploader"
-  console.log(app.getName());
-  
-
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
-
   createWindow()
-
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -206,11 +201,27 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
     //   settingData = JSON.parse(settingData) ; 
     // }
 
+    let dicomSettingData = fs.readFileSync(settingJsonFilePath, "utf-8") ; 
+    let backup_folder_path_info = undefined ; 
+    if (dicomSettingData){
+      dicomSettingData = JSON.parse(dicomSettingData) ; 
+      backup_folder_path_info = dicomSettingData?.setting?.folderLocation ; 
+    } else {
+      backup_folder_path_info = BACKUP_STUDY_PATH ; 
+    }
+
+    console.log("Backup folder path information");
+    console.log(backup_folder_path_info);
+    
+
     // Construct backup path
     let backup_study_folder = path.join(
-      "C://cloudimts-uploader", 
+      backup_folder_path_info, 
       data?.particularStudy?.PatientMainDicomTags?.PatientName
     );
+
+    console.log(backup_study_folder);
+    
 
     // Ensure that the full folder structure exists
     if (!fs.existsSync(backup_study_folder)){

@@ -133,23 +133,34 @@ const SettingComp = ({ visible, onClose, onSave }) => {
 
             <Spin spinning = {isLoading || isPending}>
                 <Form form={form} layout="vertical">
+                    
+                    {/* IP address related input  */}
                     <Form.Item 
                         label="IP Address" name="ipAddress" 
                         rules={[{ required: true, message: "Please enter IP Address" }]}>
                         <Input placeholder="Enter IP Address" />
-                    </Form.Item>
+                    </Form.Item>    
+
+                    {/* DICOM AET input  */}
                     <Form.Item label="DICOM AET" name="dicomAET" rules={[{ required: true, message: "Please enter DICOM AET" }]}>
                         <Input placeholder="Enter DICOM AET" />
                     </Form.Item>
+                    
+                    {/* DICOM Port input  */}
                     <Form.Item label="PORT" name="port" rules={[{ required: true, message: "Please enter PORT" }]}>
-                        <Input placeholder="Enter PORT" />
+                        <Input placeholder="Enter PORT" type="number" />
                     </Form.Item>
+                    
+                    {/* Auto upload related delay information  */}
                     <Form.Item label="Auto upload delay" name="delay" rules={[{ required: true, message: "Please enter auto upload delay" }]}>
-                        <Input placeholder="Enter delay" />
+                        <Input placeholder="Enter delay" type="number"/>
                     </Form.Item>
+                    
+                    {/* Study backup folder related path information  */}
                     <Form.Item label="Folder Location" name="folderLocation" rules={[{ required: true, message: "Please enter Folder Location" }]}>
                         <Input placeholder="Enter Folder Location" />
                     </Form.Item>
+                
                 </Form>
             </Spin>
         </Modal>
