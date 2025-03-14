@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, RouterProvider, createBrowserRouter } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, RouterProvider, createBrowserRouter, createHashRouter } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { notification } from "antd";
@@ -11,6 +11,7 @@ import BaseLayout from "./page/baseLayout";
 import { ROUTES_LIST } from "./constant/route.constant";
 import { GlobalProvider } from "./context/globalContext";
 import StudyUploadHistory from "./page/studyUploadHistory";
+import ErrorPage from "./page/errorPage";
 
 function App() {
   // Configure Ant Design notifications when the component mounts.
@@ -37,28 +38,33 @@ function App() {
   );
 
   // Router list ================================================
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     {
       path: ROUTES_LIST.SPLASH_ROUTE,
-      element: <Splash/>
+      element: <Splash/>, 
+      errorElement: <ErrorPage/>
     }, 
     {
       path: ROUTES_LIST.LOGIN_ROUTE, 
-      element: <LoginPage/>
+      element: <LoginPage/>, 
+      errorElement: <ErrorPage/>
     }, 
     {
       path: ROUTES_LIST.STUDYLIST_ROUTE, 
       element: <BaseLayout
         element={<StudyList/>}
-      />
-    }, 
+      />, 
+      errorElement: <ErrorPage/>
+    },    
     {
       path: ROUTES_LIST.STUDYUPLOAD_ROUTE, 
-      element: <BaseLayout element={<StudyUpload/>} />
+      element: <BaseLayout element={<StudyUpload/>} />, 
+      errorElement: <ErrorPage/>
     },
     {
       path: ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE, 
-      element: <BaseLayout element={<StudyUploadHistory/>} />
+      element: <BaseLayout element={<StudyUploadHistory/>} />, 
+      errorElement: <ErrorPage/>
     }
   ])
 

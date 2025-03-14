@@ -2,15 +2,14 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'; 
-import cloudimtsIcon from "../../resources/cloudimts.png?asset" ; 
 import fs from "fs" ; 
 import fsA from 'fs-extra';
 import { fileURLToPath } from 'url';
 import { FILE_OPERATION_CONSTANT, FILE_OPERATION_READ_FAILED } from '../renderer/src/constant/constant';
 import { FILE_OPERATION_FAILED } from '../renderer/src/constant/constant';
-import { ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JSON_CONFIGURATION_PATH, BACKUP_STUDY_PATH } from '../renderer/src/constant/filepath.constant';
+import { ORTHANCE_SERVER_DESTINATION_FOLDER, ORTHANCE_JSON_CONFIGURATION_PATH, BACKUP_STUDY_PATH,WIN_EXE_ORTAHNC_FOLDER } from '../renderer/src/constant/filepath.constant';
 import { spawn } from 'child_process';
-import { deleteParticularSeriesRequest, deleteParticularStudyRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
+import { deleteParticularSeriesRequest, fetchStudyList, ORTHANC_URL } from '../renderer/src/handler/study.handler';
 import axios from 'axios';
 import { autoUpdater } from 'electron';
 import { jobDeleteRequest } from '../renderer/src/handler/study.handler';
@@ -33,6 +32,7 @@ function createWindow() {
       webSecurity: false, 
       nodeIntegration: true
     }, 
+    icon: icon
   })
 
   mainWindow.setTitle("Cloudimts Uploader")
@@ -154,16 +154,24 @@ ipcMain.handle("read-setting-info", async (event) => {
 
 // # 4 ==== Handle orthanc server related folder ====================
 ipcMain.on("orthanc-server-handle", async (event) => {
-  if (!fs.existsSync(ORTHANCE_SERVER_DESTINATION_FOLDER)){
+  if (!fsA.existsSync(ORTHANCE_SERVER_DESTINATION_FOLDER)) {
     try {
-      await fsA.copy(ORTHANCE_SOURCE_FOLDER, ORTHANCE_SERVER_DESTINATION_FOLDER) ; 
-      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORTAHNCE_SERVER_FOLDER_COPY)
-    } catch (error) {
-      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORATANCE_SERVER_FOLDER_COPY_FAILED)
-    }  
-  }
-})
+      const fromPath = app.isPackaged
+        ? path.join(process.resourcesPath, WIN_EXE_ORTAHNC_FOLDER)
+        : path.join(__dirname, 'Orthanc server');
 
+      const toPath = ORTHANCE_SERVER_DESTINATION_FOLDER;
+      
+      // Copy Orthanc server files
+      await fsA.copy(fromPath, toPath);
+
+      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORTAHNCE_SERVER_FOLDER_COPY);
+    } catch (error) {
+      console.error('Orthanc Server Error:', error);
+      event.reply("orthanc-server-reply", FILE_OPERATION_CONSTANT.ORATANCE_SERVER_FOLDER_COPY_FAILED);
+    }
+  }
+});
 // # 5 ==== Configure orthanc.exe in background ==========================
 ipcMain.on("orthanc-exe-configure", async(event) => {
   try {
