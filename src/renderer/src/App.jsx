@@ -17,7 +17,7 @@ function App() {
   useEffect(() => {
     notification.config({
       placement: "topRight",
-      duration: 2,
+      duration: 3,
       top: 10,
     });
   }, []);

@@ -12,8 +12,7 @@ import { insertNewStudiesDataRequest, insertStudyUploadTimeInfoRequest } from ".
 import moment from "moment";
 import { useQueries } from "@tanstack/react-query";
 
-const StudyInfoComponent = ({studyid, userInformation, setCacheStudyList}) => {
-
+const StudyInfoComponent = ({studyid, userInformation, setCacheStudyList, cacheStudyList}) => {
     const studyBackupRun = useRef(false); 
 
     // **** State **** // 
@@ -154,14 +153,9 @@ const StudyInfoComponent = ({studyid, userInformation, setCacheStudyList}) => {
                     }));
                     await deleteParticularStudyRequest(studyid);
                     showNotification("success", "Study Deleted", "Study has been deleted successfully");
-                    
-                    setCacheStudyList((prev) => {
-                        const updatedList = { ...prev };
-                        delete updatedList[studyid]; // Remove the key from the object
-                        return updatedList;
-                    });
+                    setCacheStudyList((prev) => prev.filter((item) => item !== studyid));
                 }
-            }
+            }   
         };
     
         handleDelete(); 
@@ -352,6 +346,25 @@ const StudyInfoComponent = ({studyid, userInformation, setCacheStudyList}) => {
             setHasTriggeredUpload(true);
         }
     }, [timeCounter, isUploadingInitiate, isDeleteInitiate, hasTriggeredUpload]);
+
+    // code for handling when upload initiate and after that new series comes than automatic start uploading to that 
+    // series
+    // useEffect(() => {
+    //     if (isUploadingInitiate && hasTriggeredUpload && studySeriesList?.length > 0) {
+    //         const pendingSeriesForUpload = studySeriesList.filter(series => 
+    //             studyList?.[studyid]?.[series?.ID]?.status === SERIES_STATUS.UPLOAD_PENDING
+    //         );
+
+    //         if (pendingSeriesForUpload.length > 0) {
+    //             const timer = setTimeout(() => {
+    //                 console.log("Run upload functionality");
+    //                 uploadHandler();
+    //             }, 8000); // 8 seconds delay
+
+    //             return () => clearTimeout(timer); // Cleanup timer on unmount
+    //         }
+    //     }
+    // }, [isUploadingInitiate, hasTriggeredUpload, studySeriesList, studyList, studyid, uploadHandler]);
 
     // ***** Delete particular seriesDeleteQueue related handler ***** // 
     const SeriesDeleteHandler = async () => {

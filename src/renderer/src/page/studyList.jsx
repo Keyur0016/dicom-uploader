@@ -47,6 +47,7 @@ const StudyList = () => {
                             studyid={element}
                             userInformation={userInformation}
                             setCacheStudyList = {setCacheStudyList}
+                            cacheStudyList = {cacheStudyList}
                         />
                     )
                 })}

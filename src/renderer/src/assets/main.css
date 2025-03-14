@@ -265,9 +265,9 @@ body{
   width: 300px !important;
 }
 
-.notification-div .ant-notification-notice-message {
+.notification-div .ant-notification-notice-message strong {
   font-size: 14px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
 .notification-div .ant-notification-notice-description {
