@@ -113,9 +113,33 @@ app.on('window-all-closed', () => {
 // # 1 ==== Save dicom setting related information 
 ipcMain.on("save-dicom-setting", async (event, data) => {
   try {
+    
+    // Save new dicom setting related data in json file 
     fs.writeFileSync(settingJsonFilePath, JSON.stringify(data, null, 2), "utf-8") ; 
+
+    // Update orthanc configuration json
+    if (fs.existsSync(ORTHANCE_JSON_CONFIGURATION_PATH)){
+
+      console.log("Orthanc json configuration path");
+      console.log(ORTHANCE_JSON_CONFIGURATION_PATH);
+      
+
+      // Load Orthanc JSON configuration file
+      const orthancData = JSON.parse(fs.readFileSync(ORTHANCE_JSON_CONFIGURATION_PATH, 'utf8'));
+        
+      // Modify configuration
+      orthancData['DicomAet'] = data?.setting?.dicomAET;
+      orthancData['DicomPort'] = +data?.setting?.port ; 
+      
+      // Save updated configuration back to file
+      fs.writeFileSync(ORTHANCE_JSON_CONFIGURATION_PATH, JSON.stringify(orthancData, null, 4), 'utf8');
+    }
+
     event.reply("save-sucess", FILE_OPERATION_CONSTANT.DICOM_SETTING_FILE_SAVED) ; 
   } catch (error) {
+    console.log("Orthanc setting configuration error mesasge ===================");
+    console.log(error);
+    
     event.reply("save-error", FILE_OPERATION_FAILED)
   }
 })
@@ -203,11 +227,6 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
       url: `${ORTHANC_URL}jobs/${data?.backupJobID}/archive`, 
       responseType: "stream"
     });
-    
-    // let settingData = localStorage.getItem("dicom-setting") ; 
-    // if (settingData){
-    //   settingData = JSON.parse(settingData) ; 
-    // }
 
     let dicomSettingData = fs.readFileSync(settingJsonFilePath, "utf-8") ; 
     let backup_folder_path_info = undefined ; 
@@ -217,10 +236,6 @@ ipcMain.on("study-backup-folder-handler", async(event, data) => {
     } else {
       backup_folder_path_info = BACKUP_STUDY_PATH ; 
     }
-
-    console.log("Backup folder path information");
-    console.log(backup_folder_path_info);
-    
 
     // Construct backup path
     let backup_study_folder = path.join(

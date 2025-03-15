@@ -28,7 +28,7 @@ const StudyUploadHistory = () => {
             render: (text, record) => {
                 return(
                     <div style={{
-                        fontWeight: 600
+                        fontWeight: 700
                     }}>
                         {record?.patient_id}
                     </div>

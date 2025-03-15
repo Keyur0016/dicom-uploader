@@ -4,7 +4,7 @@ import { BackwardFilled, ReloadOutlined, SettingOutlined } from "@ant-design/ico
 import { UploadOutlined } from "@ant-design/icons";
 import { LogoutOutlined } from "@ant-design/icons";
 import SettingComp from "./settingComp";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTES_LIST } from "../constant/route.constant";
 import { HistoryOutlined } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ const Header = ({isUpload}) => {
     const [isSettingModalOpen, setIsSettingModalOpen] = useState(false) ; 
     const [userInformation, setUserInformation] = useState(undefined) ; 
     const navigation = useNavigate() ;
+    const windowLocation = useLocation() ; 
 
     useEffect(() => {
         let userData = localStorage.getItem("orthanc-peer-data") ; 
@@ -66,7 +67,7 @@ const Header = ({isUpload}) => {
     return(
         <Flex className="header-div" gap={10}>
 
-            {window.location.pathname !== ROUTES_LIST.STUDYLIST_ROUTE && (
+            {windowLocation.pathname !== ROUTES_LIST.STUDYLIST_ROUTE && (
                 <Button style={{
                     marginTop: "auto", 
                     marginBottom: "auto"
@@ -87,7 +88,7 @@ const Header = ({isUpload}) => {
                 Settings
             </Button>  
 
-            {window.location.pathname !== ROUTES_LIST.STUDYUPLOAD_ROUTE && (
+            {windowLocation.pathname !== ROUTES_LIST.STUDYUPLOAD_ROUTE && (
                 <Button icon = {<UploadOutlined/>} style={{
                     marginTop: "auto", 
                     marginBottom: "auto"
@@ -98,7 +99,7 @@ const Header = ({isUpload}) => {
                 </Button>
             )}
 
-            {window.location.pathname !== ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE && (
+            {windowLocation.pathname !== ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE && (
                 <div className="upload-history-button"
                     onClick={() => {
                         navigation(ROUTES_LIST.STUDYUPLOAD_HISTORY_ROUTE)
